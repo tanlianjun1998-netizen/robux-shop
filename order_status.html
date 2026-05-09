@@ -29,7 +29,7 @@ async function checkOrder(){
  const box=document.getElementById('result');
  if(order){
  box.style.display='block';
- box.innerHTML=`<h3>Order Found</h3><p><b>User:</b> ${order.username}</p><p><b>Phone:</b> ${order.Contact Number}</p><p><b>Package:</b> ${<p><b>Price:</b> ${order.price}</p><p><b>Status:</b> ${order.status}</p>`;
+ box.innerHTML=`<h3>Order Found</h3><p><b>User:</b> ${order.username}</p><p><b>Phone:</b> ${order.phone}</p><p><b>Package:</b> ${order.package}</p><p><b>Price:</b> ${order.price}</p><p><b>Status:</b> ${order.status}</p>`;
  } else {
  box.style.display='block';
  box.innerHTML='<h3>Order not found</h3>';
