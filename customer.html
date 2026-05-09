@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Robux Store</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b1220;
+  color:white;
+}
+
+.container{
+  max-width:700px;
+  margin:auto;
+  padding:20px;
+}
+
+/* HEADER */
+header{
+  text-align:center;
+  padding:20px;
+}
+
+h1{
+  font-size:34px;
+}
+
+.sub{
+  color:#94a3b8;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+/* PACKAGE */
+.box{
+  background:#111827;
+  padding:15px;
+  border-radius:12px;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition:0.2s;
+}
+
+.box:hover{
+  transform:scale(1.03);
+}
+
+.selected{
+  border:2px solid #22c55e;
+}
+
+.price{
+  color:#22c55e;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+/* FORM */
+section{
+  margin-top:20px;
+  background:#111827;
+  padding:15px;
+  border-radius:12px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#1f2937;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  background:#22c55e;
+  border:none;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* QR */
+.qrBox{
+  text-align:center;
+}
+
+.qrBox img{
+  width:240px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.qrBox img:hover{
+  transform:scale(1.05);
+}
+
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.85);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal img{
+  width:360px;
+  border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <h1>🛒 Robux Store</h1>
+  <div class="sub">Fast Delivery · Secure Payment · Auto Processing</div>
+</header>
+
+<!-- PACKAGES -->
+<div class="grid">
+
+<div class="box" onclick="select('200 Robux','RM5.40')">
+  200 Robux
+  <div class="price">RM5.40</div>
+</div>
+
+<div class="box" onclick="select('400 Robux','RM10.80')">
+  400 Robux
+  <div class="price">RM10.80</div>
+</div>
+
+<div class="box" onclick="select('800 Robux','RM21.60')">
+  800 Robux
+  <div class="price">RM21.60</div>
+</div>
+
+<div class="box" onclick="select('1000 Robux','RM26.00')">
+  1000 Robux
+  <div class="price">RM26.00</div>
+</div>
+
+</div>
+
+<!-- ORDER -->
+<section>
+<h2>📦 Place Order</h2>
+
+<input id="username" placeholder="Roblox Username">
+
+<input id="package" placeholder="Selected Package" readonly>
+
+<input id="price" placeholder="Price (RM)" readonly>
+
+<input type="file" id="proof" accept="image/*">
+
+<button onclick="submitOrder()">Submit Order</button>
+</section>
+
+<!-- QR PAYMENT -->
+<section class="qrBox">
+
+<h2>💳 Payment QR (Touch ’n Go)</h2>
+
+<img src="/mnt/data/qr.png" onclick="openQR()">
+
+<p style="color:#94a3b8;margin-top:10px">
+Click QR to enlarge
+</p>
+
+</section>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="closeQR()">
+  <img src="https://i.imgur.com/KOxpOPD.png" width="240">
+</div>
+
+<script>
+
+let selectedPackage = "";
+let selectedPrice = "";
+
+/* SELECT PACKAGE */
+function select(pkg, price){
+
+  selectedPackage = pkg;
+  selectedPrice = price;
+
+  document.getElementById("package").value = pkg;
+  document.getElementById("price").value = price;
+
+  let boxes = document.querySelectorAll(".box");
+  boxes.forEach(b => b.classList.remove("selected"));
+  event.target.closest(".box").classList.add("selected");
+}
+
+/* IMAGE TO BASE64 */
+function toBase64(file){
+  return new Promise((res)=>{
+    let r = new FileReader();
+    r.readAsDataURL(file);
+    r.onload = ()=>res(r.result);
+  });
+}
+
+/* SUBMIT ORDER */
+async function submitOrder(){
+
+  let username = document.getElementById("username").value;
+  let file = document.getElementById("proof").files[0];
+
+  if(!username || !selectedPackage){
+    alert("Please complete all fields");
+    return;
+  }
+
+  let proof = "";
+
+  if(file){
+    proof = await toBase64(file);
+  }
+
+  const API_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
+
+  await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      username,
+      package:selectedPackage,
+      price:selectedPrice,
+      proof
+    })
+  });
+
+  alert("✅ Order submitted successfully!");
+}
+
+/* QR MODAL */
+function openQR(){
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeQR(){
+  document.getElementById("modal").style.display = "none";
+}
+
+</script>
+
+</body>
+</html>
