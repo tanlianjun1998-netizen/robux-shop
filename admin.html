@@ -173,18 +173,27 @@ async function updateStatus(i){
   let order = ordersData.slice().reverse()[i];
 
   let formData = new URLSearchParams();
-
   formData.append("action", "update");
   formData.append("orderId", order.orderId);
   formData.append("status", status);
 
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: formData
-  });
+  try {
 
-  alert("Updated!");
-  loadData();
+    let res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    let text = await res.text();
+    console.log("Server response:", text);
+
+    alert("Updated: " + text);
+
+    loadData();
+
+  } catch(err){
+    alert("ERROR: " + err.message);
+  }
 }
   
 </script>
