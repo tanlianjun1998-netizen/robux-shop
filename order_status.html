@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Check Order Status</title>
+<style>
+body{margin:0;font-family:Arial;background:#0b1220;color:white;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.box{background:#111827;padding:30px;border-radius:14px;width:420px;text-align:center}
+input{width:100%;padding:12px;margin:10px 0;border:none;border-radius:8px;background:#1f2937;color:white;box-sizing:border-box}
+button{width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;color:white;cursor:pointer}
+.result{margin-top:20px;padding:15px;background:#1f2937;border-radius:10px;display:none}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>📦 Check Order Status</h2>
+<input id="orderId" placeholder="Enter Order ID">
+<button onclick="checkOrder()">Check Status</button>
+<div class="result" id="result"></div>
+</div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec';
+async function checkOrder(){
+ const id=document.getElementById('orderId').value.trim();
+ if(!id){alert('Enter order ID');return;}
+ const res=await fetch(API);
+ const data=await res.json();
+ const order=data.find(o=>String(o.orderId)===id);
+ const box=document.getElementById('result');
+ if(order){
+ box.style.display='block';
+ box.innerHTML=`<h3>Order Found</h3><p><b>User:</b> ${order.username}</p><p><b>Package:</b> ${order.package}</p><p><b>Price:</b> ${order.price}</p><p><b>Status:</b> ${order.status}</p>`;
+ } else {
+ box.style.display='block';
+ box.innerHTML='<h3>Order not found</h3>';
+ }
+}
+</script>
+</body>
+</html>
