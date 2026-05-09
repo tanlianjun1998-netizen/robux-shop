@@ -197,7 +197,7 @@ Click QR to enlarge
 let selectedPackage = "";
 let selectedPrice = "";
 
-/* PACKAGE SELECT */
+/* SELECT */
 function select(el, pkg, price){
 
   selectedPackage = pkg;
@@ -206,27 +206,20 @@ function select(el, pkg, price){
   document.getElementById("package").value = pkg;
   document.getElementById("price").value = price;
 
-  let boxes = document.querySelectorAll(".box");
-  boxes.forEach(b => b.classList.remove("selected"));
+  document.querySelectorAll(".box").forEach(b=>{
+    b.classList.remove("selected");
+  });
 
   el.classList.add("selected");
 }
 
-/* BASE64 */
-function toBase64(file){
-  return new Promise((resolve)=>{
-    let reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = ()=> resolve(reader.result);
-  });
-}
-
-/* SUBMIT */
+/* SUBMIT (STABLE VERSION) */
 async function submitOrder(){
 
   try{
 
     let username = document.getElementById("username").value;
+    let file = document.getElementById("proof").files[0];
 
     if(!username || !selectedPackage){
       alert("Please complete all fields");
@@ -235,26 +228,30 @@ async function submitOrder(){
 
     const API_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
 
-    const response = await fetch(API_URL,{
+    let formData = new FormData();
+    formData.append("username", username);
+    formData.append("package", selectedPackage);
+    formData.append("price", selectedPrice);
+
+    if(file){
+      formData.append("proof", file);
+    }
+
+    let res = await fetch(API_URL,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        username,
-        package:selectedPackage,
-        price:selectedPrice
-      })
+      body:formData
     });
 
-    const result = await response.text();
-    console.log(result);
+    let text = await res.text();
+
+    console.log(text);
 
     alert("✅ Order submitted successfully!");
 
     document.getElementById("username").value = "";
     document.getElementById("package").value = "";
     document.getElementById("price").value = "";
+    document.getElementById("proof").value = "";
 
     selectedPackage = "";
     selectedPrice = "";
@@ -267,6 +264,15 @@ async function submitOrder(){
     console.error(err);
     alert("Error: " + err.message);
   }
+}
+
+/* QR */
+function openQR(){
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeQR(){
+  document.getElementById("modal").style.display = "none";
 }
 
 </script>
