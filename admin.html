@@ -178,24 +178,14 @@ async function updateStatus(i){
   formData.append("orderId", order.orderId);
   formData.append("status", status);
 
-  try{
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: formData
+  });
 
-    let res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: formData
-    });
-
-    let text = await res.text();
-    console.log(text);
-
-    alert("Updated!");
-    loadData();
-
-  }catch(err){
-    alert("Update failed: " + err.message);
-  }
+  alert("Updated!");
+  loadData();
 }
-
 </script>
 
 </body>
