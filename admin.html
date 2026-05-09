@@ -96,7 +96,7 @@ td{
   <th>Package</th>
   <th>Price</th>
   <th>Status</th>
-  <th>Update</th>
+  <th>Action</th>
 </tr>
 </thead>
 
@@ -109,7 +109,7 @@ td{
 
 <script>
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec"; // 🔥 replace this
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
 
 let ordersData = [];
 
@@ -126,7 +126,7 @@ function login(){
   }
 }
 
-/* LOAD ORDERS */
+/* LOAD DATA */
 async function loadData(){
 
   try{
@@ -146,12 +146,20 @@ async function loadData(){
           <td>${o.price}</td>
           <td>${o.status}</td>
           <td>
+
             <select id="status_${i}">
-            <option ${o.status==="Pending"?"selected":""}>Pending</option>
-            <option ${o.status==="Paid"?"selected":""}>Paid</option>
-            <option ${o.status==="Delivered"?"selected":""}>Delivered</option>
+              <option ${o.status==="Pending"?"selected":""}>Pending</option>
+              <option ${o.status==="Paid"?"selected":""}>Paid</option>
+              <option ${o.status==="Delivered"?"selected":""}>Delivered</option>
             </select>
+
             <button onclick="updateStatus(${i})">Save</button>
+
+            <button style="background:#ef4444;margin-top:5px"
+              onclick="deleteOrder(${i})">
+              🗑 Delete
+            </button>
+
           </td>
         </tr>
       `;
@@ -161,7 +169,6 @@ async function loadData(){
 
   }catch(err){
     alert("Failed to load data: " + err.message);
-    console.error(err);
   }
 }
 
@@ -177,7 +184,7 @@ async function updateStatus(i){
   formData.append("orderId", order.orderId);
   formData.append("status", status);
 
-  try {
+  try{
 
     let res = await fetch(SCRIPT_URL, {
       method: "POST",
@@ -185,17 +192,45 @@ async function updateStatus(i){
     });
 
     let text = await res.text();
-    console.log("Server response:", text);
 
     alert("Updated: " + text);
 
     loadData();
 
-  } catch(err){
-    alert("ERROR: " + err.message);
+  }catch(err){
+    alert("Update failed: " + err.message);
   }
 }
-  
+
+/* DELETE ORDER */
+async function deleteOrder(i){
+
+  let order = ordersData.slice().reverse()[i];
+
+  if(!confirm("Delete order " + order.orderId + " ?")) return;
+
+  let formData = new URLSearchParams();
+  formData.append("action", "delete");
+  formData.append("orderId", order.orderId);
+
+  try{
+
+    let res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    let text = await res.text();
+
+    alert("Deleted: " + text);
+
+    loadData();
+
+  }catch(err){
+    alert("Delete failed: " + err.message);
+  }
+}
+
 </script>
 
 </body>
