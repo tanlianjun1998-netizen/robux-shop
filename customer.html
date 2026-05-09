@@ -23,13 +23,8 @@ header{
   padding:20px;
 }
 
-h1{
-  font-size:34px;
-}
-
-.sub{
-  color:#94a3b8;
-}
+h1{font-size:34px;}
+.sub{color:#94a3b8;}
 
 .grid{
   display:grid;
@@ -46,13 +41,8 @@ h1{
   transition:0.2s;
 }
 
-.box:hover{
-  transform:scale(1.03);
-}
-
-.selected{
-  border:2px solid #22c55e;
-}
+.box:hover{transform:scale(1.03);}
+.selected{border:2px solid #22c55e;}
 
 .price{
   color:#22c55e;
@@ -89,35 +79,17 @@ button{
   cursor:pointer;
 }
 
-.qrBox{
+/* QR AT BOTTOM */
+.qr{
+  margin-top:30px;
   text-align:center;
-}
-
-.qrBox img{
-  width:240px;
+  background:#111827;
+  padding:20px;
   border-radius:12px;
-  cursor:pointer;
-  transition:0.2s;
 }
 
-.qrBox img:hover{
-  transform:scale(1.05);
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.85);
-  justify-content:center;
-  align-items:center;
-}
-
-.modal img{
-  width:360px;
+.qr img{
+  width:260px;
   border-radius:12px;
 }
 </style>
@@ -129,67 +101,58 @@ button{
 
 <header>
   <h1>🛒 Robux Store</h1>
-  <div class="sub">Fast Delivery · Secure Payment · Auto Processing</div>
+  <div class="sub">Fast Delivery · Secure Payment</div>
 </header>
 
 <!-- PACKAGES -->
 <div class="grid">
 
-<div class="box" onclick="select(this,'200 Robux','RM5.40')">
-  200 Robux
-  <div class="price">RM5.40</div>
+<div class="box" onclick="select(this,'200','5.40')">
+200 Robux <div class="price">RM5.40</div>
 </div>
 
-<div class="box" onclick="select(this,'400 Robux','RM10.80')">
-  400 Robux
-  <div class="price">RM10.80</div>
+<div class="box" onclick="select(this,'400','10.80')">
+400 Robux <div class="price">RM10.80</div>
 </div>
 
-<div class="box" onclick="select(this,'800 Robux','RM21.60')">
-  800 Robux
-  <div class="price">RM21.60</div>
+<div class="box" onclick="select(this,'800','21.60')">
+800 Robux <div class="price">RM21.60</div>
 </div>
 
-<div class="box" onclick="select(this,'1000 Robux','RM26.00')">
-  1000 Robux
-  <div class="price">RM26.00</div>
+<div class="box" onclick="select(this,'1000','26.00')">
+1000 Robux <div class="price">RM26.00</div>
 </div>
 
 </div>
+
+<!-- CUSTOM -->
+<section>
+<h3>🎯 Custom Robux</h3>
+
+<input type="number" id="customAmount" placeholder="Enter Robux (1000+)" oninput="calcPrice()">
+<input id="customPrice" placeholder="Auto Price (RM)" readonly>
+
+<button onclick="useCustom()">Use Custom</button>
+</section>
 
 <!-- ORDER -->
 <section>
-<h2>📦 Place Order</h2>
+<h3>📦 Place Order</h3>
 
 <input id="username" placeholder="Roblox Username">
-
+<input id="phone" placeholder="Phone Number (WhatsApp)">
 <input id="package" placeholder="Selected Package" readonly>
-
 <input id="price" placeholder="Price (RM)" readonly>
-
-<input type="file" id="proof" accept="image/*">
 
 <button onclick="submitOrder()">Submit Order</button>
 </section>
 
-<!-- QR -->
-<section class="qrBox">
-
-<h2>💳 Payment QR (Touch ’n Go)</h2>
-
-<img src="https://i.imgur.com/KOxpOPD.png" onclick="openQR()">
-
-<p style="color:#94a3b8;margin-top:10px">
-Click QR to enlarge
-</p>
-
-</section>
-
+<!-- QR (BOTTOM) -->
+<div class="qr">
+<h3>💳 Scan to Pay</h3>
+<img src="https://i.imgur.com/KOxpOPD.png">
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="modal" onclick="closeQR()">
-  <img src="https://i.imgur.com/KOxpOPD.png">
 </div>
 
 <script>
@@ -197,97 +160,93 @@ Click QR to enlarge
 let selectedPackage = "";
 let selectedPrice = "";
 
-/* SELECT */
-function select(el, pkg, price){
+/* SELECT PACKAGE */
+function select(el,pkg,price){
 
   selectedPackage = pkg;
   selectedPrice = price;
 
-  document.getElementById("package").value = pkg;
-  document.getElementById("price").value = price;
+  document.getElementById("package").value = pkg + " Robux";
+  document.getElementById("price").value = "RM " + price;
 
-  document.querySelectorAll(".box").forEach(b=>{
-    b.classList.remove("selected");
-  });
-
+  document.querySelectorAll(".box").forEach(b=>b.classList.remove("selected"));
   el.classList.add("selected");
 }
 
-/* SUBMIT (STABLE VERSION) */
+/* CUSTOM PRICE */
+function calcPrice(){
+
+  let amt = document.getElementById("customAmount").value;
+
+  if(!amt){
+    document.getElementById("customPrice").value = "";
+    return;
+  }
+
+  let price;
+
+  if(amt >= 1000){
+    price = (amt / 100) * 2.6;
+  }else{
+    price = (amt / 100) * 2.7;
+  }
+
+  document.getElementById("customPrice").value = "RM " + price.toFixed(2);
+}
+
+/* USE CUSTOM */
+function useCustom(){
+
+  let amt = document.getElementById("customAmount").value;
+  let price = document.getElementById("customPrice").value;
+
+  if(!amt){
+    alert("Enter Robux amount");
+    return;
+  }
+
+  selectedPackage = amt + " Robux (Custom)";
+  selectedPrice = price;
+
+  document.getElementById("package").value = selectedPackage;
+  document.getElementById("price").value = selectedPrice;
+
+  alert("Custom selected!");
+}
+
+/* SUBMIT */
 async function submitOrder(){
 
-  const btn = document.querySelector("button");
-  const originalText = btn.innerText;
+  let username = document.getElementById("username").value;
+  let phone = document.getElementById("phone").value;
+
+  if(!username || !phone || !selectedPackage){
+    alert("Please fill all fields");
+    return;
+  }
+
+  const API = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
+
+  let form = new URLSearchParams();
+  form.append("username", username);
+  form.append("phone", phone);
+  form.append("package", selectedPackage);
+  form.append("price", selectedPrice);
 
   try{
 
-    let username = document.getElementById("username").value;
-    let file = document.getElementById("proof").files[0];
-
-    if(!username || !selectedPackage){
-      alert("Please complete all fields");
-      return;
-    }
-
-    /* 🔥 SHOW LOADING */
-    btn.innerText = "Submitting...";
-    btn.disabled = true;
-    btn.style.opacity = "0.7";
-
-    const API_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
-
-    let formData = new FormData();
-    formData.append("username", username);
-    formData.append("package", selectedPackage);
-    formData.append("price", selectedPrice);
-
-    if(file){
-      formData.append("proof", file);
-    }
-
-    let res = await fetch(API_URL,{
+    let res = await fetch(API,{
       method:"POST",
-      body:formData
+      body:form
     });
 
     let text = await res.text();
-    console.log(text);
 
-    alert("✅ Order submitted successfully!");
-
-    /* RESET FORM */
-    document.getElementById("username").value = "";
-    document.getElementById("package").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("proof").value = "";
-
-    selectedPackage = "";
-    selectedPrice = "";
-
-    document.querySelectorAll(".box").forEach(b=>{
-      b.classList.remove("selected");
-    });
+    alert("SUCCESS: " + text);
 
   }catch(err){
-    console.error(err);
     alert("Error: " + err.message);
-
-  }finally{
-
-    /* 🔥 RESTORE BUTTON */
-    btn.innerText = originalText;
-    btn.disabled = false;
-    btn.style.opacity = "1";
   }
-}
-
-/* QR */
-function openQR(){
-  document.getElementById("modal").style.display = "flex";
-}
-
-function closeQR(){
-  document.getElementById("modal").style.display = "none";
 }
 
 </script>
