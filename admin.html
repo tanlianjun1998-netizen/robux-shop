@@ -172,18 +172,17 @@ async function updateStatus(i){
 
   let order = ordersData.slice().reverse()[i];
 
+  let formData = new URLSearchParams();
+
+  formData.append("action", "update");
+  formData.append("orderId", order.orderId);
+  formData.append("status", status);
+
   try{
 
     let res = await fetch(SCRIPT_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        action: "update",
-        orderId: order.orderId,
-        status: status
-      })
+      body: formData
     });
 
     let text = await res.text();
