@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - Robux Store</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b1220;
+  color:white;
+}
+
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+}
+
+input, button, select{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+
+button{
+  background:#22c55e;
+  color:white;
+  cursor:pointer;
+}
+
+/* LOGIN */
+.loginBox{
+  text-align:center;
+  margin-top:100px;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #1f2937;
+  text-align:center;
+}
+
+th{
+  background:#111827;
+}
+
+td{
+  background:#0f172a;
+}
+
+img{
+  width:60px;
+  border-radius:6px;
+}
+
+.badge{
+  padding:5px 10px;
+  border-radius:6px;
+}
+
+.pending{background:#f59e0b;}
+.paid{background:#3b82f6;}
+.done{background:#22c55e;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 🔐 LOGIN -->
+<div id="login" class="loginBox">
+  <h2>🔐 Admin Login</h2>
+  <input type="password" id="pass" placeholder="Enter password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="panel" style="display:none">
+
+<h1>🛠 Admin Dashboard</h1>
+
+<button onclick="loadData()">🔄 Refresh Orders</button>
+
+<table>
+<thead>
+<tr>
+  <th>Order ID</th>
+  <th>User</th>
+  <th>Package</th>
+  <th>Price</th>
+  <th>Proof</th>
+  <th>Status</th>
+  <th>Update</th>
+</tr>
+</thead>
+
+<tbody id="orders"></tbody>
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL";
+
+/* LOGIN */
+function login(){
+  let pass = document.getElementById("pass").value;
+
+  if(pass === "admin123"){
+    document.getElementById("login").style.display="none";
+    document.getElementById("panel").style.display="block";
+    loadData();
+  }else{
+    alert("Wrong password");
+  }
+}
+
+/* LOAD DATA FROM SHEET */
+async function loadData(){
+
+  let res = await fetch(SCRIPT_URL);
+  let data = await res.json();
+
+  let html = "";
+
+  data.forEach((d,i)=>{
+
+    html += `
+      <tr>
+        <td>${d[0]}</td>
+        <td>${d[1]}</td>
+        <td>${d[2]}</td>
+        <td>${d[3]}</td>
+        <td>
+          ${d[4] ? `<a href="${d[4]}" target="_blank">View</a>` : "No Proof"}
+        </td>
+        <td>
+          <span class="badge">${d[5]}</span>
+        </td>
+        <td>
+          <select id="status${i}">
+            <option>Pending</option>
+            <option>Paid</option>
+            <option>Delivered</option>
+          </select>
+          <button onclick="updateStatus(${i})">Save</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML = html;
+}
+
+/* UPDATE STATUS */
+function updateStatus(i){
+
+  let status = document.getElementById("status"+i).value;
+
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    body: JSON.stringify({
+      action:"update",
+      row:i,
+      status:status
+    })
+  });
+
+  alert("Updated!");
+}
+
+</script>
+
+</body>
+</html>
