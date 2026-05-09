@@ -216,6 +216,9 @@ function select(el, pkg, price){
 /* SUBMIT (STABLE VERSION) */
 async function submitOrder(){
 
+  const btn = document.querySelector("button");
+  const originalText = btn.innerText;
+
   try{
 
     let username = document.getElementById("username").value;
@@ -225,6 +228,11 @@ async function submitOrder(){
       alert("Please complete all fields");
       return;
     }
+
+    /* 🔥 SHOW LOADING */
+    btn.innerText = "Submitting...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
 
     const API_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
 
@@ -243,11 +251,11 @@ async function submitOrder(){
     });
 
     let text = await res.text();
-
     console.log(text);
 
     alert("✅ Order submitted successfully!");
 
+    /* RESET FORM */
     document.getElementById("username").value = "";
     document.getElementById("package").value = "";
     document.getElementById("price").value = "";
@@ -263,6 +271,13 @@ async function submitOrder(){
   }catch(err){
     console.error(err);
     alert("Error: " + err.message);
+
+  }finally{
+
+    /* 🔥 RESTORE BUTTON */
+    btn.innerText = originalText;
+    btn.disabled = false;
+    btn.style.opacity = "1";
   }
 }
 
