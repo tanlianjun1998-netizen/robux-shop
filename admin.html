@@ -140,16 +140,16 @@ async function loadData(){
 
       html += `
         <tr>
-          <td>${o.id}</td>
+          <td>${o.orderId}</td>
           <td>${o.username}</td>
           <td>${o.package}</td>
           <td>${o.price}</td>
           <td>${o.status}</td>
           <td>
             <select id="status_${i}">
-              <option>Pending</option>
-              <option>Paid</option>
-              <option>Delivered</option>
+            <option ${o.status==="Pending"?"selected":""}>Pending</option>
+            <option ${o.status==="Paid"?"selected":""}>Paid</option>
+            <option ${o.status==="Delivered"?"selected":""}>Delivered</option>
             </select>
             <button onclick="updateStatus(${i})">Save</button>
           </td>
