@@ -20,6 +20,7 @@ body{
 
 h1{text-align:center;}
 
+/* LOGIN */
 .loginBox{
   text-align:center;
   margin-top:120px;
@@ -33,11 +34,51 @@ input,button,select{
 }
 
 button{
-  background:#22c55e;
-  color:white;
   cursor:pointer;
 }
 
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin:20px 0;
+}
+
+.card{
+  background:#111827;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card:hover{transform:scale(1.03);}
+
+.activeCard{
+  outline:2px solid #22c55e;
+}
+
+.card h3{
+  margin:0;
+  font-size:13px;
+  color:#94a3b8;
+}
+
+.card p{
+  margin-top:8px;
+  font-size:18px;
+  font-weight:bold;
+  color:#22c55e;
+}
+
+/* SEARCH */
+.searchBox input{
+  width:100%;
+}
+
+/* TABLE */
 table{
   width:100%;
   margin-top:20px;
@@ -53,10 +94,56 @@ th,td{
 th{background:#111827;}
 td{background:#0f172a;}
 
-.badge{
+/* STATUS */
+.status-badge{
   padding:5px 10px;
-  border-radius:6px;
-  background:#f59e0b;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.pending{background:#f59e0b;color:black;}
+.paid{background:#22c55e;color:black;}
+.delivered{background:#3b82f6;color:white;}
+
+/* ACTION BUTTONS */
+.action-btn{
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  border-radius:8px;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+.btn-pending{background:#f59e0b;color:black;}
+.btn-paid{background:#22c55e;color:black;}
+.btn-delivered{background:#3b82f6;color:white;}
+
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.8);
+  justify-content:center;
+  align-items:center;
+}
+
+.modalBox{
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  width:340px;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .cards{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -69,7 +156,7 @@ td{background:#0f172a;}
 <div id="login" class="loginBox">
   <h2>🔐 Admin Login</h2>
   <input type="password" id="pass" placeholder="Enter password">
-  <button onclick="login()">Login</button>
+  <button onclick="login()" style="background:#22c55e;color:white;">Login</button>
 </div>
 
 <!-- PANEL -->
@@ -77,18 +164,52 @@ td{background:#0f172a;}
 
 <h1>🛠 Admin Dashboard</h1>
 
-<button onclick="loadData()">🔄 Refresh</button>
+<button onclick="loadData()" style="background:#3b82f6;color:white;">🔄 Refresh</button>
+
+<div class="searchBox">
+  <input id="search" placeholder="Search username / phone" oninput="renderTable()">
+</div>
+
+<!-- FILTER CARDS + REVENUE -->
+<div class="cards">
+
+  <div class="card" id="card-all" onclick="setFilter('ALL')">
+    <h3>Total Orders</h3>
+    <p id="total">0</p>
+  </div>
+
+  <div class="card" id="card-pending" onclick="setFilter('Pending')">
+    <h3>Pending</h3>
+    <p id="pending">0</p>
+  </div>
+
+  <div class="card" id="card-paid" onclick="setFilter('Paid')">
+    <h3>Paid</h3>
+    <p id="paid">0</p>
+  </div>
+
+  <div class="card" id="card-delivered" onclick="setFilter('Delivered')">
+    <h3>Delivered</h3>
+    <p id="delivered">0</p>
+  </div>
+
+  <!-- 🔥 NEW REVENUE CARD -->
+  <div class="card">
+    <h3>Total Revenue</h3>
+    <p id="revenue">RM 0.00</p>
+  </div>
+
+</div>
 
 <table>
 <thead>
 <tr>
   <th>Order ID</th>
   <th>User</th>
-  <th>Contact Number</th>
+  <th>Phone</th>
   <th>Package</th>
   <th>Price</th>
   <th>Status</th>
-  <th>Action</th>
 </tr>
 </thead>
 
@@ -96,7 +217,17 @@ td{background:#0f172a;}
 </table>
 
 </div>
+</div>
 
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="closeModal()">
+  <div class="modalBox" onclick="event.stopPropagation()">
+    <h3>Order Detail</h3>
+    <div id="modalContent"></div>
+    <button onclick="closeModal()" style="margin-top:10px;background:#ef4444;color:white;width:100%;">
+      Close
+    </button>
+  </div>
 </div>
 
 <script>
@@ -104,15 +235,18 @@ td{background:#0f172a;}
 const API = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
 
 let orders = [];
+let filter = "ALL";
 
 /* LOGIN */
 function login(){
-  let pass = document.getElementById("pass").value;
+  const pass = document.getElementById("pass").value;
 
   if(pass === "admin13841384"){
     document.getElementById("login").style.display="none";
     document.getElementById("panel").style.display="block";
+
     loadData();
+    setInterval(loadData,5000);
   }else{
     alert("Wrong password");
   }
@@ -120,92 +254,144 @@ function login(){
 
 /* LOAD */
 async function loadData(){
+  let res = await fetch(API);
+  orders = await res.json();
+  renderTable();
+  updateCards();
+  highlightCard();
+}
 
-  try{
-    let res = await fetch(API);
-    orders = await res.json();
+/* FILTER */
+function setFilter(f){
+  filter = f;
+  renderTable();
+  highlightCard();
+}
 
-    let html = "";
+/* HIGHLIGHT */
+function highlightCard(){
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("activeCard"));
 
-    // ❗ NO reverse index bug anymore
-    orders.forEach(o=>{
+  if(filter==="ALL") document.getElementById("card-all").classList.add("activeCard");
+  if(filter==="Pending") document.getElementById("card-pending").classList.add("activeCard");
+  if(filter==="Paid") document.getElementById("card-paid").classList.add("activeCard");
+  if(filter==="Delivered") document.getElementById("card-delivered").classList.add("activeCard");
+}
 
-      html += `
-        <tr>
-          <td>${o.orderId}</td>
-          <td>${o.username}</td>
-          <td>${o.phone || ""}</td>
-          <td>${o.package}</td>
-          <td>${o.price}</td>
-          <td>
-            <select id="status_${o.orderId}">
-              <option value="Pending" ${o.status==="Pending"?"selected":""}>Pending</option>
-              <option value="Paid" ${o.status==="Paid"?"selected":""}>Paid</option>
-              <option value="Delivered" ${o.status==="Delivered"?"selected":""}>Delivered</option>
-            </select>
-          </td>
-          <td>
-            <button onclick="updateStatus(${o.orderId})">Save</button>
-            <button style="background:red" onclick="deleteOrder(${o.orderId})">Delete</button>
-          </td>
-        </tr>
-      `;
-    });
+/* TABLE */
+function renderTable(){
 
-    document.getElementById("orders").innerHTML = html;
+  let search = document.getElementById("search").value.toLowerCase();
 
-  }catch(err){
-    alert("Load failed: " + err.message);
-  }
+  let html = "";
+
+  orders.forEach(o=>{
+
+    if(filter!=="ALL" && o.status!==filter) return;
+
+    if(search &&
+      !o.username.toLowerCase().includes(search) &&
+      !String(o.phone).toLowerCase().includes(search)
+    ) return;
+
+    html += `
+      <tr onclick="openModal(${o.orderId})">
+        <td>${o.orderId}</td>
+        <td>${o.username}</td>
+        <td>${o.phone || ""}</td>
+        <td>${o.package}</td>
+        <td>${o.price}</td>
+        <td>
+          <span class="status-badge ${
+            o.status==="Pending" ? "pending" :
+            o.status==="Paid" ? "paid" :
+            "delivered"
+          }">${o.status}</span>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML = html;
+}
+
+/* CARDS + REVENUE */
+function updateCards(){
+
+  let total=0, pending=0, paid=0, delivered=0;
+  let revenue=0;
+
+  orders.forEach(o=>{
+    total++;
+
+    let price = parseFloat(String(o.price).replace("RM",""))||0;
+
+    if(o.status==="Paid" || o.status==="Delivered"){
+      revenue += price;
+    }
+
+    if(o.status==="Pending") pending++;
+    if(o.status==="Paid") paid++;
+    if(o.status==="Delivered") delivered++;
+  });
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("pending").innerText=pending;
+  document.getElementById("paid").innerText=paid;
+  document.getElementById("delivered").innerText=delivered;
+  document.getElementById("revenue").innerText="RM " + revenue.toFixed(2);
+}
+
+/* MODAL */
+function openModal(id){
+
+  let o = orders.find(x=>x.orderId==id);
+
+  document.getElementById("modalContent").innerHTML=`
+    <p><b>ID:</b> ${o.orderId}</p>
+    <p><b>User:</b> ${o.username}</p>
+    <p><b>Phone:</b> ${o.phone}</p>
+    <p><b>Package:</b> ${o.package}</p>
+    <p><b>Price:</b> ${o.price}</p>
+
+    <p><b>Status:</b>
+      <span class="status-badge ${
+        o.status==="Pending"?"pending":
+        o.status==="Paid"?"paid":"delivered"
+      }">${o.status}</span>
+    </p>
+
+    <br>
+
+    <button class="action-btn btn-pending"
+      onclick="updateStatus(${o.orderId},'Pending')">Mark Pending</button>
+
+    <button class="action-btn btn-paid"
+      onclick="updateStatus(${o.orderId},'Paid')">Mark Paid</button>
+
+    <button class="action-btn btn-delivered"
+      onclick="updateStatus(${o.orderId},'Delivered')">Mark Delivered</button>
+  `;
+
+  document.getElementById("modal").style.display="flex";
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
 }
 
 /* UPDATE */
-async function updateStatus(orderId){
+async function updateStatus(orderId,status){
 
-  let status = document.getElementById("status_"+orderId).value;
-
-  let form = new URLSearchParams();
+  let form=new URLSearchParams();
   form.append("action","update");
   form.append("orderId",orderId);
   form.append("status",status);
 
-  try{
+  await fetch(API,{method:"POST",body:form});
 
-    let res = await fetch(API,{
-      method:"POST",
-      body:form
-    });
-
-    alert(await res.text());
-    loadData();
-
-  }catch(err){
-    alert("Update failed: " + err.message);
-  }
-}
-
-/* DELETE */
-async function deleteOrder(orderId){
-
-  if(!confirm("Delete order " + orderId + "?")) return;
-
-  let form = new URLSearchParams();
-  form.append("action","delete");
-  form.append("orderId",orderId);
-
-  try{
-
-    let res = await fetch(API,{
-      method:"POST",
-      body:form
-    });
-
-    alert(await res.text());
-    loadData();
-
-  }catch(err){
-    alert("Delete failed: " + err.message);
-  }
+  alert("Status Updated ✅");
+  loadData();
 }
 
 </script>
