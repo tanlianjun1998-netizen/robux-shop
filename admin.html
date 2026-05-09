@@ -22,15 +22,16 @@ h1{
   text-align:center;
 }
 
+/* LOGIN */
 .loginBox{
   text-align:center;
   margin-top:120px;
 }
 
 input, button, select{
-  padding:8px;
-  margin:4px;
-  border-radius:6px;
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
   border:none;
 }
 
@@ -59,12 +60,6 @@ th{
 
 td{
   background:#0f172a;
-}
-
-.editInput{
-  width:100px;
-  background:#1f2937;
-  color:white;
 }
 
 .badge{
@@ -96,7 +91,7 @@ td{
 <table>
 <thead>
 <tr>
-  <th>ID</th>
+  <th>Order ID</th>
   <th>User</th>
   <th>Package</th>
   <th>Price</th>
@@ -114,7 +109,7 @@ td{
 
 <script>
 
-const SCRIPT_URL = "YOUR_SCRIPT_URL_HERE";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
 
 let ordersData = [];
 
@@ -126,7 +121,7 @@ function login(){
     document.getElementById("login").style.display="none";
     document.getElementById("panel").style.display="block";
     loadData();
-  } else {
+  }else{
     alert("Wrong password");
   }
 }
@@ -147,26 +142,24 @@ async function loadData(){
         <tr>
           <td>${o.orderId}</td>
           <td>${o.username}</td>
-
+          <td>${o.package}</td>
+          <td>${o.price}</td>
+          <td>${o.status}</td>
           <td>
-            <input class="editInput" id="pkg_${i}" value="${o.package}">
-          </td>
 
-          <td>
-            <input class="editInput" id="price_${i}" value="${o.price}">
-          </td>
-
-          <td>
             <select id="status_${i}">
               <option ${o.status==="Pending"?"selected":""}>Pending</option>
               <option ${o.status==="Paid"?"selected":""}>Paid</option>
               <option ${o.status==="Delivered"?"selected":""}>Delivered</option>
             </select>
-          </td>
 
-          <td>
-            <button onclick="updateOrder(${i})">Save</button>
-            <button onclick="deleteOrder(${i})" style="background:red">Delete</button>
+            <button onclick="updateStatus(${i})">Save</button>
+
+            <button style="background:#ef4444;margin-top:5px"
+              onclick="deleteOrder(${i})">
+              🗑 Delete
+            </button>
+
           </td>
         </tr>
       `;
@@ -175,33 +168,38 @@ async function loadData(){
     document.getElementById("orders").innerHTML = html;
 
   }catch(err){
-    alert("Load failed: " + err.message);
+    alert("Failed to load data: " + err.message);
   }
 }
 
-/* UPDATE ORDER */
-async function updateOrder(i){
+/* UPDATE STATUS */
+async function updateStatus(i){
+
+  let status = document.getElementById("status_"+i).value;
 
   let order = ordersData.slice().reverse()[i];
 
-  let status = document.getElementById("status_"+i).value;
-  let pkg = document.getElementById("pkg_"+i).value;
-  let price = document.getElementById("price_"+i).value;
+  let formData = new URLSearchParams();
+  formData.append("action", "update");
+  formData.append("orderId", order.orderId);
+  formData.append("status", status);
 
-  let form = new URLSearchParams();
-  form.append("action","update");
-  form.append("orderId",order.orderId);
-  form.append("status",status);
-  form.append("package",pkg);
-  form.append("price",price);
+  try{
 
-  await fetch(SCRIPT_URL,{
-    method:"POST",
-    body:form
-  });
+    let res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
 
-  alert("Updated!");
-  loadData();
+    let text = await res.text();
+
+    alert("Updated: " + text);
+
+    loadData();
+
+  }catch(err){
+    alert("Update failed: " + err.message);
+  }
 }
 
 /* DELETE ORDER */
@@ -209,19 +207,28 @@ async function deleteOrder(i){
 
   let order = ordersData.slice().reverse()[i];
 
-  if(!confirm("Delete this order?")) return;
+  if(!confirm("Delete order " + order.orderId + " ?")) return;
 
-  let form = new URLSearchParams();
-  form.append("action","delete");
-  form.append("orderId",order.orderId);
+  let formData = new URLSearchParams();
+  formData.append("action", "delete");
+  formData.append("orderId", order.orderId);
 
-  await fetch(SCRIPT_URL,{
-    method:"POST",
-    body:form
-  });
+  try{
 
-  alert("Deleted!");
-  loadData();
+    let res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    let text = await res.text();
+
+    alert("Deleted: " + text);
+
+    loadData();
+
+  }catch(err){
+    alert("Delete failed: " + err.message);
+  }
 }
 
 </script>
