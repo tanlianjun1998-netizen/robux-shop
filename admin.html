@@ -120,6 +120,7 @@ td{background:#0f172a;}
 .btn-pending{background:#f59e0b;color:black;}
 .btn-paid{background:#22c55e;color:black;}
 .btn-delivered{background:#3b82f6;color:white;}
+.btn-delete{background:#ef4444;color:white;}
 
 /* MODAL */
 .modal{
@@ -170,7 +171,7 @@ td{background:#0f172a;}
   <input id="search" placeholder="Search username / phone" oninput="renderTable()">
 </div>
 
-<!-- FILTER CARDS + REVENUE -->
+<!-- CARDS -->
 <div class="cards">
 
   <div class="card" id="card-all" onclick="setFilter('ALL')">
@@ -193,7 +194,6 @@ td{background:#0f172a;}
     <p id="delivered">0</p>
   </div>
 
-  <!-- 🔥 NEW REVENUE CARD -->
   <div class="card">
     <h3>Total Revenue</h3>
     <p id="revenue">RM 0.00</p>
@@ -282,7 +282,6 @@ function highlightCard(){
 function renderTable(){
 
   let search = document.getElementById("search").value.toLowerCase();
-
   let html = "";
 
   orders.forEach(o=>{
@@ -371,6 +370,11 @@ function openModal(id){
 
     <button class="action-btn btn-delivered"
       onclick="updateStatus(${o.orderId},'Delivered')">Mark Delivered</button>
+
+    <button class="action-btn btn-delete"
+      onclick="deleteOrder(${o.orderId})">
+      Delete Order
+    </button>
   `;
 
   document.getElementById("modal").style.display="flex";
@@ -380,7 +384,7 @@ function closeModal(){
   document.getElementById("modal").style.display="none";
 }
 
-/* UPDATE */
+/* UPDATE STATUS */
 async function updateStatus(orderId,status){
 
   let form=new URLSearchParams();
@@ -391,6 +395,22 @@ async function updateStatus(orderId,status){
   await fetch(API,{method:"POST",body:form});
 
   alert("Status Updated ✅");
+  loadData();
+}
+
+/* DELETE ORDER */
+async function deleteOrder(orderId){
+
+  if(!confirm("Delete this order?")) return;
+
+  let form=new URLSearchParams();
+  form.append("action","delete");
+  form.append("orderId",orderId);
+
+  await fetch(API,{method:"POST",body:form});
+
+  alert("Order Deleted ❌");
+  closeModal();
   loadData();
 }
 
