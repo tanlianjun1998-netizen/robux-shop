@@ -227,17 +227,10 @@ async function submitOrder(){
   try{
 
     let username = document.getElementById("username").value;
-    let file = document.getElementById("proof").files[0];
 
     if(!username || !selectedPackage){
       alert("Please complete all fields");
       return;
-    }
-
-    let proof = "";
-
-    if(file){
-      proof = await toBase64(file);
     }
 
     const API_URL = "https://script.google.com/macros/s/AKfycbxHFzugofomgjtLI7SlkAiTEa6BDKedcL-87rZsnQmGa33hQ9_5cc18WgrSUsPbYJ0L/exec";
@@ -250,8 +243,7 @@ async function submitOrder(){
       body:JSON.stringify({
         username,
         package:selectedPackage,
-        price:selectedPrice,
-        proof
+        price:selectedPrice
       })
     });
 
@@ -263,7 +255,6 @@ async function submitOrder(){
     document.getElementById("username").value = "";
     document.getElementById("package").value = "";
     document.getElementById("price").value = "";
-    document.getElementById("proof").value = "";
 
     selectedPackage = "";
     selectedPrice = "";
@@ -276,15 +267,6 @@ async function submitOrder(){
     console.error(err);
     alert("Error: " + err.message);
   }
-}
-
-/* QR MODAL */
-function openQR(){
-  document.getElementById("modal").style.display = "flex";
-}
-
-function closeQR(){
-  document.getElementById("modal").style.display = "none";
 }
 
 </script>
