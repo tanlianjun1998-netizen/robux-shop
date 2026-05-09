@@ -22,6 +22,12 @@ h1{
   text-align:center;
 }
 
+/* LOGIN */
+.loginBox{
+  text-align:center;
+  margin-top:120px;
+}
+
 input, button, select{
   padding:10px;
   margin:5px;
@@ -35,12 +41,6 @@ button{
   cursor:pointer;
 }
 
-/* LOGIN */
-.loginBox{
-  text-align:center;
-  margin-top:100px;
-}
-
 /* TABLE */
 table{
   width:100%;
@@ -48,7 +48,7 @@ table{
   border-collapse:collapse;
 }
 
-th,td{
+th, td{
   padding:10px;
   border-bottom:1px solid #1f2937;
   text-align:center;
@@ -62,19 +62,11 @@ td{
   background:#0f172a;
 }
 
-img{
-  width:60px;
-  border-radius:6px;
-}
-
 .badge{
   padding:5px 10px;
   border-radius:6px;
+  background:#f59e0b;
 }
-
-.pending{background:#f59e0b;}
-.paid{background:#3b82f6;}
-.done{background:#22c55e;}
 </style>
 </head>
 
@@ -82,19 +74,19 @@ img{
 
 <div class="container">
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="login" class="loginBox">
   <h2>🔐 Admin Login</h2>
   <input type="password" id="pass" placeholder="Enter password">
   <button onclick="login()">Login</button>
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- PANEL -->
 <div id="panel" style="display:none">
 
 <h1>🛠 Admin Dashboard</h1>
 
-<button onclick="loadData()">🔄 Refresh Orders</button>
+<button onclick="loadData()">🔄 Refresh</button>
 
 <table>
 <thead>
@@ -103,7 +95,6 @@ img{
   <th>User</th>
   <th>Package</th>
   <th>Price</th>
-  <th>Proof</th>
   <th>Status</th>
   <th>Update</th>
 </tr>
@@ -118,7 +109,9 @@ img{
 
 <script>
 
-const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL";
+const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL"; // 🔥 replace this
+
+let ordersData = [];
 
 /* LOGIN */
 function login(){
@@ -133,58 +126,73 @@ function login(){
   }
 }
 
-/* LOAD DATA FROM SHEET */
+/* LOAD ORDERS */
 async function loadData(){
 
-  let res = await fetch(SCRIPT_URL);
-  let data = await res.json();
+  try{
 
-  let html = "";
+    let res = await fetch(SCRIPT_URL);
+    ordersData = await res.json();
 
-  data.forEach((d,i)=>{
+    let html = "";
 
-    html += `
-      <tr>
-        <td>${d[0]}</td>
-        <td>${d[1]}</td>
-        <td>${d[2]}</td>
-        <td>${d[3]}</td>
-        <td>
-          ${d[4] ? `<a href="${d[4]}" target="_blank">View</a>` : "No Proof"}
-        </td>
-        <td>
-          <span class="badge">${d[5]}</span>
-        </td>
-        <td>
-          <select id="status${i}">
-            <option>Pending</option>
-            <option>Paid</option>
-            <option>Delivered</option>
-          </select>
-          <button onclick="updateStatus(${i})">Save</button>
-        </td>
-      </tr>
-    `;
-  });
+    ordersData.reverse().forEach((o,i)=>{
 
-  document.getElementById("orders").innerHTML = html;
+      html += `
+        <tr>
+          <td>${o.id}</td>
+          <td>${o.username}</td>
+          <td>${o.package}</td>
+          <td>${o.price}</td>
+          <td>${o.status}</td>
+          <td>
+            <select id="status_${i}">
+              <option>Pending</option>
+              <option>Paid</option>
+              <option>Delivered</option>
+            </select>
+            <button onclick="updateStatus(${i})">Save</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("orders").innerHTML = html;
+
+  }catch(err){
+    alert("Failed to load data: " + err.message);
+    console.error(err);
+  }
 }
 
 /* UPDATE STATUS */
-function updateStatus(i){
+async function updateStatus(i){
 
-  let status = document.getElementById("status"+i).value;
+  let status = document.getElementById("status_"+i).value;
 
-  fetch(SCRIPT_URL,{
-    method:"POST",
-    body: JSON.stringify({
-      action:"update",
-      row:i,
-      status:status
-    })
-  });
+  let order = ordersData.slice().reverse()[i];
 
-  alert("Updated!");
+  try{
+
+    await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        action:"update",
+        row: i,
+        orderId: order.id,
+        status: status
+      })
+    });
+
+    alert("Updated!");
+    loadData();
+
+  }catch(err){
+    alert("Update failed: " + err.message);
+  }
 }
 
 </script>
